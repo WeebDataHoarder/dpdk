@@ -124,6 +124,11 @@ FM10000 PMD driver. The switch driver can be acquired from Intel support.
 Only Testpoint is validated with DPDK, the latest version that has been
 validated with DPDK is 4.1.6.
 
+To avoid loading other switch driver from outside of DPDK, there is another
+way to load switch driver in DPDK. If you want to use the inline switch driver,
+you need to set ''CONFIG_RTE_FM10K_SWITCH_MANAGEMENT=y'' in the configure file.
+The inline switch driver supports mirror and some flow forward rules.
+
 Support for Switch Restart
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 

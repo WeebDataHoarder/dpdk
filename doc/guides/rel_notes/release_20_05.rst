@@ -242,6 +242,14 @@ New Features
   not possible if any checksum calculation was requested - in such cases the
   code falls back to fixed compression as before.
 
+* **Updated Intel fm10k driver.**
+
+  Updated Intel fm10k driver with new features and improvements, including:
+
+  * Added support for switch management.
+  * Added support for flow operation.
+  * Added support for mirror operation.
+
 * **Updated the turbo_sw bbdev PMD.**
 
   Added support for large size code blocks which do not fit in one mbuf
