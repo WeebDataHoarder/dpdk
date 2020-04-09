@@ -717,6 +717,7 @@ struct fm10k_hw {
 	u16 subsystem_vendor_id;
 	u8 revision_id;
 	u32 flags;
+	bool switch_ready;
 #define FM10K_HW_FLAG_CLOCK_OWNER	BIT(0)
 };
 

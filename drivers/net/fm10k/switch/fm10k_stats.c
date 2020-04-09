@@ -998,6 +998,134 @@ fm10k_stats_epl_port_print(struct fm10k_switch *sw)
 	}
 }
 
+void
+fm10k_stats_dpdk_port_print(struct fm10k_switch *sw)
+{
+	int i, j, lport, pf_no;
+	struct fm10k_port_counters counters;
+	struct fm10k_ext_port ext_port;
+	static struct fm10k_stats_data last_data[FM10K_SW_PEPS_MAX];
+	static struct fm10k_stats_data last_queue_data[FM10K_SW_PEPS_MAX][4];
+	struct fm10k_stats_data data, mydata;
+	char pf_ports[10];
+
+	for (i = 0; i < FM10K_SW_LOGICAL_PORTS_MAX; i++) {
+		if (sw->dpdk_cfg->ports[i].hw == NULL)
+			continue;
+		if (sw->dpdk_cfg->ports[i].type != FM10K_CONFIG_DPDK_PF)
+			continue;
+		if (sw->dpdk_cfg->dpdk_port_map[i].type ==
+				FM10K_CONFIG_PORT_MAP_NULL)
+			continue;
+
+		memset(&mydata, 0, sizeof(mydata));
+		if (sw->dpdk_cfg->dpdk_port_map[i].type ==
+				FM10K_CONFIG_PORT_MAP_PFS) {
+			for (j = 0; j < 2; j++) {
+				pf_no =
+				sw->dpdk_cfg->dpdk_port_map[i].map_no[j];
+				lport = sw->pep_map[pf_no].logical_port;
+				memset(&ext_port, 0, sizeof(ext_port));
+				ext_port.portno = lport;
+				fm10k_get_port_counters
+				(sw, &ext_port, &counters);
+				data.rx_pkts = counters.cnt_rx_bcst_pkts +
+						counters.cnt_rx_ucst_pkts;
+				data.tx_pkts = counters.cnt_tx_bcst_pkts +
+						counters.cnt_tx_ucst_pkts;
+				data.rx_drop = counters.cnt_cmpriv_drop_pkts;
+				mydata.rx_pkts += data.rx_pkts -
+						last_data[pf_no].rx_pkts;
+				mydata.tx_pkts += data.tx_pkts -
+						last_data[pf_no].tx_pkts;
+				mydata.rx_drop += data.rx_drop -
+						last_data[pf_no].rx_drop;
+				last_data[pf_no] = data;
+			}
+		} else if (sw->dpdk_cfg->dpdk_port_map[i].type ==
+				FM10K_CONFIG_PORT_MAP_PF) {
+			pf_no = sw->dpdk_cfg->dpdk_port_map[i].map_no[0];
+			lport = sw->pep_map[pf_no].logical_port;
+			memset(&ext_port, 0, sizeof(ext_port));
+			ext_port.portno = lport;
+			fm10k_get_port_counters(sw, &ext_port, &counters);
+			data.rx_pkts = counters.cnt_rx_bcst_pkts +
+					counters.cnt_rx_ucst_pkts;
+			data.tx_pkts = counters.cnt_tx_bcst_pkts +
+					counters.cnt_tx_ucst_pkts;
+			data.rx_drop = counters.cnt_cmpriv_drop_pkts;
+			mydata.rx_pkts += data.rx_pkts -
+					last_data[pf_no].rx_pkts;
+			mydata.tx_pkts += data.tx_pkts -
+					last_data[pf_no].tx_pkts;
+			mydata.rx_drop += data.rx_drop -
+					last_data[pf_no].rx_drop;
+			last_data[pf_no] = data;
+		} else {
+			continue;
+		}
+
+		if (sw->dpdk_cfg->dpdk_port_map[i].type ==
+				FM10K_CONFIG_PORT_MAP_PF)
+			sprintf(pf_ports, "%d",
+				sw->dpdk_cfg->dpdk_port_map[i].map_no[0]);
+		else
+			sprintf(pf_ports, "%d/%d",
+				sw->dpdk_cfg->dpdk_port_map[i].map_no[0],
+				sw->dpdk_cfg->dpdk_port_map[i].map_no[1]);
+
+		FM10K_SW_INFO("DPDK port %-2d  pf %-5s   tx_pkt %-12llu "
+				"rx_pkt %-12llu drop_pkt %-12llu\n",
+				i, pf_ports,
+				(unsigned long long)mydata.tx_pkts,
+				(unsigned long long)mydata.rx_pkts,
+				(unsigned long long)mydata.rx_drop);
+
+		if (!fm10k_config_check_debug(sw->dpdk_cfg,
+				FM10K_CONFIG_DEBUG_STATS_QUEUE))
+			continue;
+		memset(&mydata, 0, sizeof(mydata));
+		for (j = 0;
+			 j < sw->dpdk_cfg->ports[i].tx_queue_num;
+			 j++) {
+			struct fm10k_hw *hw = sw->dpdk_cfg->ports[i].hw;
+			uint16_t queue_id = j, pf_no;
+
+			fm10k_switch_dpdk_hw_queue_map(hw, queue_id,
+					sw->dpdk_cfg->ports[i].tx_queue_num,
+					&hw, &queue_id);
+			pf_no = fm10k_switch_dpdk_pf_no_get(hw);
+			data.tx_pkts =
+				FM10K_READ_REG(hw, FM10K_QPTC(queue_id));
+			data.rx_pkts =
+				FM10K_READ_REG(hw, FM10K_QPRC(queue_id));
+			data.rx_drop =
+				FM10K_READ_REG(hw, FM10K_QPRDC(queue_id));
+			mydata.tx_pkts += data.tx_pkts -
+				last_queue_data[pf_no][queue_id].tx_pkts;
+			mydata.rx_pkts += data.rx_pkts -
+				last_queue_data[pf_no][queue_id].rx_pkts;
+			mydata.rx_drop += data.rx_drop -
+				last_queue_data[pf_no][queue_id].rx_drop;
+			FM10K_SW_INFO("            queue %d(%d:%d) tx_pkt %-12llu "
+				"rx_pkt %-12llu drop_pkt %-12llu\n", j,
+				pf_no, queue_id,
+				(unsigned long long)(data.tx_pkts -
+				last_queue_data[pf_no][queue_id].tx_pkts),
+				(unsigned long long)(data.rx_pkts -
+				last_queue_data[pf_no][queue_id].rx_pkts),
+				(unsigned long long)(data.rx_drop -
+				last_queue_data[pf_no][queue_id].rx_drop));
+			last_queue_data[pf_no][queue_id] = data;
+		}
+		FM10K_SW_INFO("                   total tx_pkt %-12llu "
+				"rx_pkt %-12llu drop_pkt %-12llu\n",
+				(unsigned long long)mydata.tx_pkts,
+				(unsigned long long)mydata.rx_pkts,
+				(unsigned long long)mydata.rx_drop);
+	}
+}
+
 static void
 fm10k_stats_port_counter_print(struct fm10k_switch *sw, int lport)
 {
@@ -1080,6 +1208,7 @@ fm10k_switch_process_stats(void *ctx)
 				FM10K_CONFIG_DEBUG_STATS_PORT)) {
 			FM10K_SW_INFO("--- port statistic ---\n");
 			fm10k_stats_epl_port_print(sw);
+			fm10k_stats_dpdk_port_print(sw);
 		}
 		if (fm10k_config_check_debug(sw->dpdk_cfg,
 				FM10K_CONFIG_DEBUG_STATS_FFU)) {
