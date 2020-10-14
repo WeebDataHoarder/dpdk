@@ -3,6 +3,11 @@
 
 subdir('base')
 objs = [base_objs]
+if get_option('fm10k_switch')
+    dpdk_conf.set('RTE_FM10K_SWITCH_MANAGEMENT', 1)
+    subdir('switch')
+    objs = [base_objs, switch_objs]
+endif
 
 sources = files(
 	'fm10k_ethdev.c',
@@ -14,3 +19,6 @@ if arch_subdir == 'x86'
 endif
 
 includes += include_directories('base')
+if get_option('fm10k_switch')
+    includes += include_directories('switch')
+endif

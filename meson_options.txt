@@ -12,6 +12,8 @@ option('enable_kmods', type: 'boolean', value: false,
 	description: 'build kernel modules')
 option('examples', type: 'string', value: '',
 	description: 'Comma-separated list of examples to build by default')
+option('fm10k_switch', type: 'boolean', value: true,
+	description: 'Enable FM10K inline Switch Manager')
 option('flexran_sdk', type: 'string', value: '',
 	description: 'Path to FlexRAN SDK optional Libraries for BBDEV device')
 option('ibverbs_link', type: 'combo', choices : ['static', 'shared', 'dlopen'], value: 'shared',
