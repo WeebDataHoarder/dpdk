@@ -755,6 +755,7 @@ fm10k_get_port_counters(struct fm10k_switch *sw,
 	fm10k_read_scatter_gather(sw, sg_list_cnt, sg_list);
 	FM10K_SW_SWITCH_UNLOCK(sw);
 
+    gettimeofday(&ts, NULL);
 	counters->timestamp = ts.tv_sec * 1000000 + ts.tv_usec;
 
 	/*
