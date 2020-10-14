@@ -772,7 +772,8 @@ fm10k_ffu_rule_enable_single_cast(struct fm10k_switch *sw,
 	uint64_t temp64;
 	uint64_t sglort_vid_tcam = 0, sglort_vid_tcam_mask = 0;
 	uint64_t sram[4] = { 0, 0, 0, 0 };
-	uint16_t sram_idx = 0, tcam_slice, sram_slice, i;
+	uint16_t sram_idx = 0, i;
+    uint16_t tcam_slice = FM10K_FFU_SLICE_START - 1, sram_slice = FM10K_FFU_SLICE_START - 1;
 
 	sglort_vid_tcam |= sglort;
 	sglort_vid_tcam_mask |= 0xffff;
@@ -866,7 +867,8 @@ fm10k_ffu_rule_enable_multi_cast(struct fm10k_switch *sw,
 	uint32_t dglort;
 	uint64_t sglort_vid_tcam = 0, sglort_vid_tcam_mask = 0;
 	uint64_t sram[4] = { 0, 0, 0, 0 };
-	uint16_t sram_idx = 0, tcam_slice, sram_slice, i;
+	uint16_t sram_idx = 0, i;
+    uint16_t tcam_slice = FM10K_FFU_SLICE_START - 1, sram_slice = FM10K_FFU_SLICE_START - 1;
 
 	dglort =
 		fm10k_ffu_set_dest_glort_multi_cast(sw,
