@@ -1919,7 +1919,7 @@ fm10k_epl_serdes_get_ical_result(struct fm10k_switch *sw,
 		val1 |= 0xffff0000;
 	if (val2 & 0x8000)
 		val2 |= 0xffff0000;
-	diff = abs(val2 - val1);
+	diff = abs((int32_t)val2 - (int32_t)val1);
 
 	if (diff >= FM10K_SW_SERDES_DFE_DATA_LEVEL0_THRESHOLD)
 		*converged = 1;
