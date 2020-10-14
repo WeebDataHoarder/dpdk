@@ -1,12 +1,15 @@
 # SPDX-License-Identifier: BSD-3-Clause
 # Copyright(c) 2017 Intel Corporation
 
-subdir('base')
-objs = [base_objs]
+
 if get_option('fm10k_switch')
     dpdk_conf.set('RTE_FM10K_SWITCH_MANAGEMENT', 1)
+    subdir('base')
     subdir('switch')
     objs = [base_objs, switch_objs]
+else
+    subdir('base')
+    objs = [base_objs]
 endif
 
 sources = files(
