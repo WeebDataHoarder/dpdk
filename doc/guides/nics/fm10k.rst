@@ -126,8 +126,13 @@ validated with DPDK is 4.1.6.
 
 To avoid loading other switch driver from outside of DPDK, there is another
 way to load switch driver in DPDK. If you want to use the inline switch driver,
-you need to set ''CONFIG_RTE_FM10K_SWITCH_MANAGEMENT=y'' in the configure file.
+you need to set ``CONFIG_RTE_FM10K_SWITCH_MANAGEMENT=y`` in the configure file.
+For meson, set option ``fm10k_switch``.
 The inline switch driver supports mirror and some flow forward rules.
+
+Configuration of external port speed and flows under inline switch driver
+can be done on ``/etc/dpdk_fm10k.conf``.
+See ``drivers/net/fm10k/switch/fm10k_config.c`` for more details.
 
 Support for Switch Restart
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
